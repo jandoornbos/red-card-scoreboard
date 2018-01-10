@@ -1,0 +1,84 @@
+<main role="main">
+
+  <!-- Main jumbotron for a primary marketing message or call to action -->
+  <div class="jumbotron">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-9">
+          <h1 class="display-3">Huidige vote</h1>
+          <h2>Grap: <em><span id="joke"></span></em></h2>
+          <h2>Door: <span id="who"></span></h2>
+          <br>
+          <h3>Tijd tot sluit: <span id="closing-time"></span></h3>
+        </div>
+        <div class="col-md-3">
+          <h5 class="text-center">Aantal stemmen</h5>
+          <span style="font-size: 200px;display: block;text-align: center;" id="vote-amount">-</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="container">
+
+    <h4>Tussenstand</h4>
+
+    <div class="row" id="leaderboard">
+
+    </div>
+
+    <hr>
+
+  </div>
+
+</main>
+
+<script>
+  var timer;
+  io.socket.on('vote_started', function response(data) {
+      console.log(data);
+    $('#joke').text(data.joke);
+    $('#who').text(data.who.name);
+    $('#vote-amount').text(data.votes);
+
+    var date = new Date(data.createdAt);
+    date.setSeconds(date.getSeconds() + 10);
+
+    var countdownDate = date.getTime();
+    var x = setInterval(function() {
+      var now = new Date().getTime();
+      var distance = countdownDate - now;
+
+      var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+
+      $('#closing-time').text(days + "d " + hours + "h " + minutes + "m " + seconds + "s");
+
+      // If the count down is finished, write some text
+      if (distance < 0) {
+        clearInterval(x);
+        $('#closing-time').text("Gesloten");
+      }
+    }, 1000);
+    timer = x;
+  });
+
+  io.socket.on('new_vote', function response(data) {
+    $('#vote-amount').text(data.votes);
+  });
+
+  io.socket.on('vote_ended', function response(data) {
+    $('#closing-time').text("Gesloten");
+    clearInterval(timer);
+  });
+  io.socket.on('update_scoreboard', function response(data) {
+      $('#leaderboard .col-md-3').remove();
+    data.forEach(function(row) {
+        $('#leaderboard').append('<div class="col-md-3"><h1 style="font-size:150px;">' + row.amount + '</h1><h3>' + row.name + '</h3></div>');
+    });
+  });
+</script>

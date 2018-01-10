@@ -1,0 +1,41 @@
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <br><br>
+      <div id="alert-container">
+      </div>
+      <div id="joke-container">
+        <h1>Grap: <span id="joke"></span></h1>
+        <h2>Door: <span id="who"></span></h2>
+
+        <button id="vote-button" class="btn btn-success btn-lg btn-block">+1</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $('#joke-container').hide();
+  var jokeId = 0;
+  $('.btn').click(function() {
+     io.socket.post('/vote/sendVote', { id: jokeId }, function response(data, jwRes) {
+        if (data.success) {
+            $('#joke-container').hide();
+            $('#alert-container').html('<div class="alert alert-success" role="alert">Bedankt voor je stem!</div>')
+        }
+     });
+  });
+
+  io.socket.on('vote_started', function response(data) {
+      jokeId = data.id;
+      $('#joke').text(data.joke);
+      $('#who').text(data.who.name);
+      $('#joke-container').show();
+  });
+
+  io.socket.on('vote_ended', function(data) {
+      $('#joke').text('');
+      $('#who').text('');
+      $('#joke-container').hide();
+  });
+</script>
